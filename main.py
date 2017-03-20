@@ -1,6 +1,11 @@
 import numpy as np;
 import matplotlib.pyplot as plt;
 
+#Constants
+global const_num_ordinates;
+
+const_num_ordinates = 1000;
+
 def inputInt(prompt):
     while True:
         try:
@@ -29,6 +34,10 @@ def menu(prompt, options):
         else:
            print("Error: Please enter a valid number");
 
+def findRandom(seed, count):
+    np.random.seed(seed);
+    return np.random.random(count);
+
 class wave:
     def __init__(self, frequency, amplitude, phase):
         self.type = "wave"
@@ -46,6 +55,13 @@ class superimposition:
         self.functionNonVector = lambda x: objects[wave1].function(x) + objects[wave2].function(x);
         self.function = np.vectorize(self.functionNonVector);
 
+class polarityReverse:
+    def __init__(self, wave):
+        self.type = "polarityReverse";
+        self.wave = wave;
+        self.functionNonVector = lambda x: 0-objects[wave].function(x);
+        self.function = np.vectorize(self.functionNonVector);
+
 def inputNewObject(prompt):
     while True:
         choice = input(prompt);
@@ -54,22 +70,21 @@ def inputNewObject(prompt):
         else:
             return choice;
 
-def inputExistingWave(prompt):
+def inputExistingObject(prompt):
     while True:
         choice = input(prompt);
         if choice in objects:
-            if objects[choice].type == "wave":
-                return choice;
+            return choice;
         else:
             print("Error: Please enter the name of an existing object");
 
 global objects;
-objects = dict(); #an array in which all of the waves are held
+objects = dict();
 
 while True:
-    menuChoice= menu("What would you like to do?", ["Add a wave", "Add a superimposition", "View the graph"])
+    menuChoice= menu("What would you like to do?", ["Add a wave object", "Add a superimposition object", "Add a polarity reverse object", "View the graph"])
 
-    if menuChoice == "Add a wave":
+    if menuChoice == "Add a wave object":
         waveName = inputNewObject("Name of new wave: ");
         frequency = inputFloat("Frequency of wave (Hz): ");
         amplitude = inputFloat("Amplitude of wave (ratio)");
@@ -77,20 +92,23 @@ while True:
         objects[waveName] = wave(frequency, amplitude, phase);
         print("New wave added!");
     
-    elif menuChoice == "Add a superimposition":
+    elif menuChoice == "Add a superimposition object":
         superimpositionName = inputNewObject("Name of new superimposition: ");
-        wave1Name = inputExistingWave("Name of first wave: ");
-        wave2Name = inputExistingWave("Name of second wave: ");
+        wave1Name = inputExistingObject("Name of first wave: ");
+        wave2Name = inputExistingObject("Name of second wave: ");
         objects[superimpositionName] = superimposition(wave1Name, wave2Name)
 
+    elif menuChoice == "Add a polarity reverse object":
+        polarityReverseName = inputNewObject("Name of polarity reverse object: ");
+        wave = inputExistingObject("Name of object to reverse: ");
+        objects[polarityReverseName] = polarityReverse(wave);
+
     elif menuChoice == "View the graph":
-        time = np.linspace(0,1, 500);
+        time = np.linspace(0,1, const_num_ordinates);
+        
         for k,v in objects.items():
-            if v.type == "wave" :
-                amplitude = v.function(time);
-                plt.plot(time, amplitude, label=k)
-            if v.type == "superimposition":
-                amplitude = v.function(time);
-                plt.plot(time, amplitude, label=k);
+            amplitude = v.function(time);
+            plt.plot(time, amplitude, label=k);
+        
         plt.legend();
         plt.show();
